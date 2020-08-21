@@ -36,24 +36,70 @@
   function checkProducts() {
     console.log('SendHerePlz is making its magic...')
 
-    document.querySelectorAll(targetProducts.toString()).forEach(productLink => {
+    const parser = new DOMParser()
+
+    const promises = []
+    const times = {
+      'includes': { duration: [] },
+      'parser': { duration: [] },
+      'regex': { duration: [] },
+    }
+
+    document.querySelectorAll(targetProducts.toString()).forEach((productLink, index) => {
       const loader = createLoader()
       const removeLoader = () => loader.remove()
 
       productLink.parentElement.prepend(loader)
 
-      fetch(productLink.getAttribute('href'))
+      promises.push(fetch(productLink.getAttribute('href'))
         .then(response => response.text())
         .then(data => {
-          const isNotDeliverable = notDeliverMessages.some(message => data.includes(message))
+          // INCLUDES
+          const includesStart = performance.now()
+
+          let isNotDeliverable = notDeliverMessages.some(message => data.includes(message))
+
+          const includesEnd = performance.now()
+
+          // PARSER
+          const parserStart = performance.now()
+
+          const html = parser.parseFromString(data, 'text/html')
+          isNotDeliverable = !!html.querySelector('#ddmDeliveryMessage .a-color-error')
+
+          const parserEnd = performance.now()
+
+          // REGEX
+          const regexStart = performance.now()
+
+          isNotDeliverable = /<div id=\"ddmDeliveryMessage\" .*>[\s]*<span class="a-color-error">/g.test(data)
+
+          const regexEnd = performance.now()
+
+          // ---
+
+          times.includes.duration[index] = includesEnd - includesStart
+          times.parser.duration[index] = parserEnd - parserStart
+          times.regex.duration[index] = regexEnd - regexStart
+
           if (isNotDeliverable) {
             const productTitle = productLink.querySelector('span')
             productTitle.setAttribute('style', notDeliverStyle)
           }
         })
-        .then(removeLoader)
-        .catch(removeLoader)
+        .finally(removeLoader)
+      )
     })
+
+    Promise.all(promises).then(() => {
+      console.log('Some and includes: ', average(times.includes.duration))
+      console.log('parser: ', average(times.parser.duration))
+      console.log('regex: ', average(times.regex.duration))
+    })
+  }
+
+  function average(arr) {
+    return arr.reduce((a, b) => a + b, 0) / arr.length
   }
 
   function observeNewProducts() {
