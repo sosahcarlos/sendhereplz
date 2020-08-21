@@ -45,7 +45,14 @@
       fetch(productLink.getAttribute('href'))
         .then(response => response.text())
         .then(data => {
-          const isNotDeliverable = notDeliverMessages.some(message => data.includes(message))
+          let isNotDeliverable = notDeliverMessages.some(message => data.includes(message))
+
+          if (!isNotDeliverable) {
+            const parser = new DOMParser()
+            const html = parser.parseFromString(data, 'text/html')
+            isNotDeliverable = !!html.querySelector('#ddmDeliveryMessage .a-color-error')
+          }
+
           if (isNotDeliverable) {
             const productTitle = productLink.querySelector('span')
             productTitle.setAttribute('style', notDeliverStyle)
