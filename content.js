@@ -25,8 +25,9 @@ function checkProducts(productItems) {
 
     fetch(productItem.getProductUrl())
       .then(response => response.text())
-      .then(html => parser.parseFromString(html, 'text/html'))
-      .then(page => {
+      .then(html => {
+        const content = getProductContent(html)
+        const page = parser.parseFromString(content, 'text/html')
         const product = Product(page)
 
         if (!product.isDeliverable()) {
@@ -39,6 +40,10 @@ function checkProducts(productItems) {
       })
       .finally(productItem.hideLoader)
   })
+}
+
+function getProductContent(html) {
+  return html.match(/<div id="rightCol"[\s\S]+(?=<div id="hqpWrapper")/)[0]
 }
 
 function ProductItem(container) {
