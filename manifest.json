@@ -1,11 +1,13 @@
 {
+  "author": "sendhereplz",
   "manifest_version": 2,
   "name": "SendHerePlz - Amazon shipping availability",
   "description": "Quick identification of Amazon products with shipping restrictions",
-  "version": "1.7.0",
+  "version": "1.9.1",
   "content_scripts": [
     {
       "matches": [
+        "https://smile.amazon.com/*",
         "https://www.amazon.ae/*",
         "https://www.amazon.ca/*",
         "https://www.amazon.cn/*",
